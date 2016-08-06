@@ -1,0 +1,49 @@
+{{ define "index" }}
+<html>
+    <head>
+        <link href='https://fonts.googleapis.com/css?family=Allura' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+        <meta http-equiv="refresh" content="1">
+        <style type="text/css">
+         /*
+            body {
+            background: #000;
+            color: #999999;
+            }
+            .pure-table td, .pure-table th { background-color: #222; }
+            .pure-table th { color: #ababab; }
+            .pure-table-striped tr:nth-child(2n-1) td { background-color: #111; }
+          */
+        </style>
+    </head>
+    <body>
+        {{range .Clusters }}
+        <div style="float: left; margin: 30px">
+            <h3>{{.Hostname}}</h3>
+            <table class="table table-condensed table-striped" style="font-size: 90%">
+                <thead>
+                    <th>Name</th>
+                    <th>Disk Usage</th>
+                    <th>Heap Usage</th>
+                    <th>GC Time</th>
+                </thead>
+                <tbody>
+                    {{range .Current}}
+                    <tr>
+                        <td>{{ .Name }}</td>
+                        <td>{{ .DiskUsed }}%</td>
+                        <td class="{{ .HeapCss }}">{{ .HeapUsed }}%</td>
+                        <td class="{{ .GcCss }}">{{ .GcTime }}ms</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{end}}
+    </body>
+</html>
+{{ end }}
