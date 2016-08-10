@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"sort"
+
+	humanize "github.com/dustin/go-humanize"
 )
 
 type NodeStatus struct {
@@ -41,18 +43,69 @@ func (b ByHeap) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
 func (b ByHeap) Less(i, j int) bool { return b[i].HeapUsed < b[j].HeapUsed }
 
 type Cluster struct {
-	Hostname string
-	Health   ClusterHealthResponse
-	history  map[string][]int64
-	Current  []NodeStatus
+	Hostname      string
+	Health        ClusterHealthResponse
+	history       map[string][]int64
+	Current       []NodeStatus
+	ShardMovement int
+	shardHistory  []int
+	Stats         ClusterStatsResponse
+}
+
+func (c *Cluster) HumanSize(v string) string {
+
+	switch v {
+	case "docs":
+		return humanize.Comma(c.Stats.Indices.Docs.Count)
+	}
+	return ""
+}
+
+func (c *Cluster) HealthCss() string {
+	switch c.Health.Status {
+
+	case "green":
+		return "success"
+	case "red":
+		return "danger"
+	case "yellow":
+		return "warning"
+
+	}
+	return ""
 }
 
 func NewCluster(hostname string) *Cluster {
 	return &Cluster{Hostname: hostname, history: map[string][]int64{}}
 }
 
+func (c *Cluster) GetStats() {
+	resp, err := http.Get(fmt.Sprintf("http://%s/_cluster/stats", c.Hostname))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	ret := ClusterStatsResponse{}
+	jsonErr := json.Unmarshal(body, &ret)
+	if jsonErr != nil {
+		log.Println(jsonErr)
+		return
+	}
+	c.Stats = ret
+}
+
+func (c *Cluster) DiskUsage(stat string) string {
+	switch stat {
+	case "total":
+		inTerabytes := float64(c.Stats.Indices.Store.SizeInBytes) * 0.000000000001
+		return fmt.Sprintf("%.02f", inTerabytes)
+	}
+	return ""
+}
+
 func (c *Cluster) GetHealth() {
-	resp, err := http.Get(fmt.Sprintf("http://%s/_nodes/stats", c.Hostname))
+	resp, err := http.Get(fmt.Sprintf("http://%s/_cluster/health", c.Hostname))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,15 +114,25 @@ func (c *Cluster) GetHealth() {
 	ret := ClusterHealthResponse{}
 	jsonErr := json.Unmarshal(body, &ret)
 	if jsonErr != nil {
-		log.Fatal(jsonErr)
+		log.Println(jsonErr)
+		return
 	}
 	c.Health = ret
+	shardCount := c.Health.InitializingShards + c.Health.RelocatingShards + c.Health.UnassignedShards
+	c.shardHistory = append(c.shardHistory, shardCount)
+	if len(c.shardHistory) > 60 {
+		c.shardHistory = c.shardHistory[1:]
+	}
+	if len(c.shardHistory) == 60 {
+		c.ShardMovement = c.shardHistory[0] - c.shardHistory[59]
+	}
 }
 
 func (c *Cluster) GetNodeStatus() {
 	resp, err := http.Get(fmt.Sprintf("http://%s/_nodes/stats", c.Hostname))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -77,7 +140,8 @@ func (c *Cluster) GetNodeStatus() {
 	ret := NodeStatsResponse{}
 	jsonErr := json.Unmarshal(body, &ret)
 	if jsonErr != nil {
-		log.Fatal(jsonErr)
+		log.Println(jsonErr)
+		return
 	}
 
 	nodes := []NodeStatus{}
@@ -112,5 +176,5 @@ func (c *Cluster) GetNodeStatus() {
 		nodes = append(nodes, tmp)
 	}
 	c.Current = nodes
-	sort.Sort(ByHeap(c.Current))
+	sort.Sort(sort.Reverse(ByHeap(c.Current)))
 }

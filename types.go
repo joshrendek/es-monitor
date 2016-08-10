@@ -1,5 +1,35 @@
 package main
 
+type ClusterStatsResponse struct {
+	Indices ClusterIndices `json:"indices"`
+	Nodes   ClusterNodes   `json:"nodes"`
+}
+
+type ClusterNodes struct {
+	Versions []string  `json:"versions"`
+	FS       ClusterFS `json:"fs"`
+}
+
+type ClusterStore struct {
+	SizeInBytes int64 `json:"size_in_bytes"`
+}
+
+type ClusterFS struct {
+	TotalInBytes     int64 `json:"total_in_bytes"`
+	FreeInBytes      int64 `json:"free_in_bytes"`
+	AvailableInBytes int64 `json:"available_in_bytes"`
+}
+
+type ClusterIndices struct {
+	Docs  ClusterDocs  `json:"docs"`
+	Store ClusterStore `json:"store"`
+}
+
+type ClusterDocs struct {
+	Count   int64 `json:"count"`
+	Deleted int64 `json:"deleted"`
+}
+
 type NodeStatsResponse struct {
 	ClusterName string `json:"cluster_name"`
 	Nodes       map[string]NodeStatsNodeResponse
@@ -190,7 +220,7 @@ type NodeStatsIndicesSuggestResponse struct {
 type NodeStatsOSResponse struct {
 	Timestamp int64                   `json:"timestamp"`
 	Uptime    int64                   `json:"uptime_in_millis"`
-	LoadAvg   []float64               `json:"load_average"`
+	LoadAvg   interface{}             `json:"load_average"`
 	CPU       NodeStatsOSCPUResponse  `json:"cpu"`
 	Mem       NodeStatsOSMemResponse  `json:"mem"`
 	Swap      NodeStatsOSSwapResponse `json:"swap"`

@@ -25,6 +25,48 @@
         <div style="float: left; margin: 30px">
             <h3>{{.Hostname}}</h3>
             <table class="table table-condensed table-striped" style="font-size: 90%">
+                <tr>
+                    <td>Cluster Name</td>
+                    <td class="{{ .HealthCss }}">{{ .Health.ClusterName }} / {{ .Health.Status }}</td>
+                </tr>
+                <tr>
+                    <td>Docs</td>
+                    <td>{{ .HumanSize "docs" }}</td>
+                </tr>
+                <tr>
+                    <td>Shards Moving/minute</td>
+                    <td>{{ .ShardMovement }}</td>
+                </tr>
+                <tr>
+                    <td>Number of Nodes</td>
+                    <td>{{ .Health.NumberOfNodes }}</td>
+                </tr>
+                <tr>
+                    <td>Data Nodes</td>
+                    <td>{{ .Health.NumberOfDataNodes }}</td>
+                </tr>
+                <tr>
+                    <td>Active Primary Shards</td>
+                    <td>{{ .Health.ActivePrimaryShards }}</td>
+                </tr>
+                <tr>
+                    <td>Active Shards</td>
+                    <td>{{ .Health.ActiveShards }}</td>
+                </tr>
+                <tr>
+                    <td>Relocating Shards</td>
+                    <td>{{ .Health.RelocatingShards }}</td>
+                </tr>
+                <tr>
+                    <td>Initializing Shards</td>
+                    <td>{{ .Health.InitializingShards }}</td>
+                </tr>
+                <tr>
+                    <td>Unassigned Shards</td>
+                    <td>{{ .Health.UnassignedShards }}</td>
+                </tr>
+            </table>
+            <table class="table table-condensed table-striped" style="font-size: 90%">
                 <thead>
                     <th>Name</th>
                     <th>Disk Usage</th>

@@ -55,6 +55,7 @@ func main() {
 	for _, c := range clusters {
 		go func(c *Cluster) {
 			for {
+				c.GetStats()
 				c.GetHealth()
 				c.GetNodeStatus()
 				time.Sleep(1 * time.Second)
